@@ -1,0 +1,25 @@
+name: R-e-monte-carlo
+on:
+  push: { branches: [ main, master ] }
+  pull_request: {}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+      - name: Install packages
+        run: |
+          Rscript -e 'install.packages(c("optparse","ggplot2","data.table","gganimate","gifski"))'
+      - name: Run CLI demos (small, fast)
+        run: |
+          Rscript R/main.R --mode uniform      --reps 3000 --animate TRUE  --frames 120 --outdir results
+          Rscript R/main.R --mode derangements --reps 2000 --n 200 --animate TRUE --frames 120 --outdir results
+          Rscript R/main.R --mode compare      --reps 3000 --n 200 --outdir results
+      - name: Run light tests
+        run: Rscript tests/tests.R
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: results
+          path: results/
