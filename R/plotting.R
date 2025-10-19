@@ -73,9 +73,12 @@ maybe_anim <- function(p, outfile, nframes = 200, fps = 30) {
     ggsave(sub("\\.gif$", ".png", outfile), p, width = 7, height = 5, dpi = 150)
     return(invisible(FALSE))
   }
-  # Build a frame-ready plot by mapping x to time using transition_reveal
-  g <- p + gganimate::transition_reveal(along = p$data[[1]])
-  anim <- gganimate::animate(g, nframes = nframes, fps = fps, renderer = gganimate::gifski_renderer())
+  # Only executed if pkgs are available:
+  p <- p + gganimate::transition_reveal(trial)
+  anim <- gganimate::animate(
+    p, nframes = nframes, fps = fps,
+    renderer = gganimate::gifski_renderer()
+  )
   gganimate::anim_save(outfile, anim)
   invisible(TRUE)
 }
@@ -85,7 +88,7 @@ animate_convergence_uniform <- function(k_vec, outfile = "results/e_uniform.gif"
   df <- running_ci(k_vec)
   p <- ggplot(df, aes(trial, mean)) +
     geom_ribbon(aes(ymin = lo, ymax = hi), alpha = 0.18) +
-    geom_line(size = 0.9) +
+    geom_line(linewidth = 0.9) +  # linewidth to silence ggplot warning
     geom_hline(yintercept = exp(1), linetype = "dashed") +
     labs(title = "Convergence of ê (Uniform-Sum): Trial {round(frame_along)}",
          subtitle = "95% MC CI ribbon; dashed line is e",
@@ -93,8 +96,7 @@ animate_convergence_uniform <- function(k_vec, outfile = "results/e_uniform.gif"
     theme_minimal(base_size = 12) +
     theme(panel.grid.minor = element_blank())
   p$data <- df
-  maybe_anim(p + gganimate::transition_reveal(trial),
-             outfile, nframes = nframes, fps = fps)
+  maybe_anim(p, outfile, nframes = nframes, fps = fps)
 }
 
 animate_convergence_derangements <- function(der_flags,
@@ -104,7 +106,7 @@ animate_convergence_derangements <- function(der_flags,
   lims <- .y_limits_robust(df$e_hat, cap = 10)
   p <- ggplot(df, aes(trial, e_hat)) +
     geom_ribbon(aes(ymin = lo, ymax = hi), alpha = 0.18, na.rm = TRUE) +
-    geom_line(size = 0.9, na.rm = TRUE) +
+    geom_line(linewidth = 0.9, na.rm = TRUE) +
     geom_hline(yintercept = exp(1), linetype = "dashed") +
     coord_cartesian(ylim = lims) +
     labs(title = "Convergence of ê (Derangements): Trial {round(frame_along)}",
@@ -113,6 +115,5 @@ animate_convergence_derangements <- function(der_flags,
     theme_minimal(base_size = 12) +
     theme(panel.grid.minor = element_blank())
   p$data <- df
-  maybe_anim(p + gganimate::transition_reveal(trial),
-             outfile, nframes = nframes, fps = fps)
+  maybe_anim(p, outfile, nframes = nframes, fps = fps)
 }
